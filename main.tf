@@ -1,6 +1,6 @@
 # My AWS Tenat (Kenneth's Workshop)
 provider "aws" {
-  region = "us-east-2"
+  region = "<your-region>"
 }
 
 resource "tls_private_key" "jenkins_key" {
@@ -16,13 +16,13 @@ resource "aws_key_pair" "jenkins_key" {
 resource "aws_security_group" "jenkins_sg" {
   name        = "jenkins_sg"
   description = "Allow my IP for SSH and allow all for HTTP"
-  vpc_id      = "vpc-0b580fd418d02084c"
+  vpc_id      = "<your-vpc-id>"
 
   ingress {
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
-    cidr_blocks = ["69.138.3.165/32"]
+    cidr_blocks = ["<your-ip-address>"]
   }
 
   ingress {
@@ -52,9 +52,9 @@ resource "aws_security_group" "jenkins_sg" {
 }
 
 resource "aws_instance" "jenkins_server" {
-  ami                         = "ami-09da212cf18033880" # Amazon Linux 2023 version 
+  ami                         = "<ami-id>" # I used the Amazon Linux 2023 version 
   instance_type               = "t2.micro" 
-  subnet_id                   = "subnet-076511fa53b15a969"
+  subnet_id                   = "<your-subnet-id>"
   key_name                    = aws_key_pair.jenkins_key.key_name
   vpc_security_group_ids      = [aws_security_group.jenkins_sg.id]
   associate_public_ip_address = true # This allows for the Instance to have a public IP address
@@ -62,13 +62,13 @@ resource "aws_instance" "jenkins_server" {
   user_data = <<-EOF
              #!/bin/bash
              sudo yum update && sudo yum upgrade -y
-             sudo yum install java-17-amazon-corretto-devel -y
-             sudo wget -O /etc/yum.repos.d/jenkins.repo https://pkg.jenkins.io/redhat-stable/jenkins.repo 
-             sudo rpm --import https://pkg.jenkins.io/redhat-stable/jenkins.io-2023.key
+             sudo yum install java-17-amazon-corretto-devel -y #This a production-ready distribution of OpenJDK (Java Development Kit)
+             sudo wget -O /etc/yum.repos.d/jenkins.repo https://pkg.jenkins.io/redhat-stable/jenkins.repo #Downloads the Jenkins repository configuration file and saves it in /etc/yum.repos.d/
+             sudo rpm --import https://pkg.jenkins.io/redhat-stable/jenkins.io-2023.key #Imports the Jenkins GPG key to verify the authenticity of the Jenkins packages
              sudo yum install jenkins -y
              sudo systemctl start jenkins
              sudo systemctl enable jenkins
-             sudo systemctl status jenkins
+             sudo systemctl status jenkins #This command is not really needed just wanted to add it because it perform both start & enable
                 EOF
 
   tags = {
@@ -77,7 +77,7 @@ resource "aws_instance" "jenkins_server" {
 }
 
 resource "aws_s3_bucket" "j-repo" {
-  bucket = "jenkins-webserver-bucket"
+  bucket = "<your-bucket-name>"
 
   tags = {
     Name        = "jenkins_artifacts"
